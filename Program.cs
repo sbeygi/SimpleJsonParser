@@ -8,12 +8,11 @@ using System.Net.Http;
 class MainClass
 {
 
-    public static string xz = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[55,\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\"}}";
-    public static string x = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N/A\",\"college\":\"Yale\",\"se\":[{\"a\":1},{\"b\":2}]}}";
+    public static string x = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[55,\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\"}}";
+    public static string xf = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\",\"se\":[{\"a\":1},{\"b\":2}]}}";
     public static string xg = "{\"i\":[{\"a\":1},{\"b\":2}]}";
     static void Main()
     {
-
         ModelBuilder builder = new ModelBuilder();
 
         for (int i = 0; i < x.Length;)
@@ -42,6 +41,7 @@ class MainClass
                     string value = JsonReader.ReadString(x, ref i);
                     builder.Push(value);
                     continue;
+                case '-':
                 case '0':
                 case '1':
                 case '2':
@@ -52,7 +52,7 @@ class MainClass
                 case '7':
                 case '8':
                 case '9':
-                    string num = JsonReader.ReadNumber(x, ref i);
+                    int num = JsonReader.ReadNumber(x, ref i);
                     builder.Push(num);
                     continue;
                 default:
@@ -81,6 +81,8 @@ class MainClass
                     case '"':
                         qoutes++;
                         break;
+                    case '\\':
+                        break;
                     default:
                         result += json[index];
                         break;
@@ -92,13 +94,21 @@ class MainClass
             return result;
         }
 
-        public static string ReadNumber(string json, ref int index)
+        public static int ReadNumber(string json, ref int index)
         {
-            string result = "";
+            int result = 0;
+            int multiplier = 10;
+            int sign = 1;
 
-            while (index < json.Length && json[index] > '.' && json[index] < '9')
+            if (json[index] == '-')
             {
-                result += json[index];
+                sign = -1;
+                index++;
+            }
+
+            while (index < json.Length && json[index] >= '0' && json[index] <= '9')
+            {
+                result = (result * multiplier) + (json[index] - 48) * sign;
                 index++;
             }
 
@@ -124,7 +134,7 @@ class MainClass
             refTypes.Push(ElementType.Object);
         }
 
-        internal void Push(string value)
+        internal void Push(object value)
         {
             switch (stackState)
             {
@@ -142,7 +152,7 @@ class MainClass
                     }
                     break;
                 default:
-                    lastItemKey = value;
+                    lastItemKey = (string)value;
                     break;
             }
         }
@@ -151,7 +161,7 @@ class MainClass
         {
             Dictionary<string, object> elm = new Dictionary<string, object>();
             if (lastRefType == ElementType.Array)
-                lastRef.Add(lastRef.Count.ToString(), elm);
+                lastRef.Add("__"+lastRef.Count.ToString(), elm);
             else
                 lastRef.Add(key, elm);
 
