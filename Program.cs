@@ -9,9 +9,9 @@ using System.Text;
 class MainClass
 {
 
-    public static string x = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[55,\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\"}}";
-    public static string xf = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\",\"se\":[{\"a\":1},{\"b\":2}]}}";
-    public static string xg = "{\"i\":[{\"a\":1},{\"b\":2}]}";
+    public static string xst = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[55,[66],\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\"}}";
+    public static string xs = "{\"name\":{\"first\":\"Robert\",\"middle\":\"\",\"last\":\"Smith\"},\"age\":25,\"DOB\":\"-\",\"hobbies\":[\"running\",\"coding\",\"-\"],\"education\":{\"highschool\":\"N\\/A\",\"college\":\"Yale\",\"se\":[{\"a\":1},{\"b\":2}]}}";
+    public static string x = "{\"i\":[{\"a\":1},{\"b\":2}]}";
     static void Main()
     {
 
@@ -26,13 +26,14 @@ class MainClass
     public static class JsonSerializer
     {
         static Dictionary<Type, TypesCache> typesCache = new Dictionary<Type, TypesCache>();
-        enum TypesCache { DictionaryStringObject, Int, String };
+        enum TypesCache { DictionaryStringObject, Int, String, ListOfObject };
 
         static JsonSerializer()
         {
             typesCache.Add(typeof(Dictionary<string, object>), TypesCache.DictionaryStringObject);
             typesCache.Add(typeof(int), TypesCache.Int);
             typesCache.Add(typeof(string), TypesCache.String);
+            typesCache.Add(typeof(List<object>), TypesCache.ListOfObject);
         }
 
         public static string Serialize(Dictionary<string, object> data)
@@ -56,27 +57,79 @@ class MainClass
                             writer.WriteSeparator();
 
                         stack.Push(new NamedObjectCodeBlock(item.Key, writer));
+
                         SerializeInternal((Dictionary<string, object>)item.Value, writer);
+                        stack.Peek().Close();
+                        break;
+                    case TypesCache.ListOfObject:
+                        if (stack.Count > 0)
+                            writer.WriteSeparator();
+
+                        stack.Push(new NamedArrayCodeBlock(item.Key, writer));
+
+                        SerializeInternal((List<object>)item.Value, writer);
                         stack.Peek().Close();
                         break;
                     case TypesCache.Int:
                         if (stack.Count > 0)
                             writer.WriteSeparator();
 
-                        stack.Push(new CodeBlock("", "", writer));
-                        writer.WriteInt(item.Key, (int)item.Value);
+                        stack.Push(new NumberLiteral(item.Key, (int)item.Value, writer));
                         break;
                     case TypesCache.String:
                         if (stack.Count > 0)
                             writer.WriteSeparator();
 
-                        stack.Push(new CodeBlock("", "", writer));
-                        writer.WriteString(item.Key, (string)item.Value);
+                        stack.Push(new StringLiteral(item.Key, (string)item.Value, writer));
                         break;
                     default:
                         break;
                 }
 
+            }
+        }
+
+        private static void SerializeInternal(List<object> data, JsonWriter writer)
+        {
+            Stack<CodeBlock> stack = new Stack<CodeBlock>();
+
+            foreach (var item in data)
+            {
+                switch (typesCache[item.GetType()])
+                {
+                    case TypesCache.DictionaryStringObject:
+                        if (stack.Count > 0)
+                            writer.WriteSeparator();
+
+                        stack.Push(new ObjectCodeBlock(writer));
+
+                        SerializeInternal((Dictionary<string, object>)item, writer);
+                        stack.Peek().Close();
+                        break;
+                    case TypesCache.ListOfObject:
+                        if (stack.Count > 0)
+                            writer.WriteSeparator();
+
+                        stack.Push(new ArrayCodeBlock(writer));
+
+                        SerializeInternal((List<object>)item, writer);
+                        stack.Peek().Close();
+                        break;
+                    case TypesCache.Int:
+                        if (stack.Count > 0)
+                            writer.WriteSeparator();
+
+                        stack.Push(new NumberLiteral((int)item, writer));
+                        break;
+                    case TypesCache.String:
+                        if (stack.Count > 0)
+                            writer.WriteSeparator();
+
+                        stack.Push(new StringLiteral((string)item, writer));
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -95,28 +148,26 @@ class MainClass
             chunks.Add(chunk);
         }
 
-        public void WriteInt(string key, int num)
+        public void WriteInt(int num)
         {
-            chunks.Add("\"");
-            chunks.Add(key);
-            chunks.Add("\":");
             chunks.Add(num.ToString());
         }
 
-        public void WriteString(string key, string str)
+        public void WriteString(string str)
         {
             chunks.Add("\"");
-            chunks.Add(key);
-            chunks.Add("\":\"");
             chunks.Add(str.ToString());
             chunks.Add("\"");
         }
 
         public void WriteKey(string key)
         {
+            if (string.IsNullOrEmpty(key))
+                return;
+
             chunks.Add("\"");
             chunks.Add(key);
-            chunks.Add("\"");
+            chunks.Add("\":");
         }
 
         public void WriteSeparator()
@@ -132,9 +183,15 @@ class MainClass
 
     private class CodeBlock
     {
+        private readonly string key;
         protected readonly string openBlock;
         protected readonly string closeBlock;
         protected readonly JsonWriter writer;
+
+        public CodeBlock(JsonWriter writer)
+        {
+            this.writer = writer;
+        }
 
         public CodeBlock(string openBlock, string closeBlock, JsonWriter writer)
         {
@@ -145,8 +202,19 @@ class MainClass
             Open();
         }
 
+        public CodeBlock(string key, string openBlock, string closeBlock, JsonWriter writer)
+        {
+            this.key = key;
+            this.openBlock = openBlock;
+            this.closeBlock = closeBlock;
+            this.writer = writer;
+
+            Open();
+        }
+
         public virtual void Open()
         {
+            writer.WriteKey(key);
             writer.Write(openBlock);
         }
 
@@ -168,9 +236,9 @@ class MainClass
         private readonly string name;
 
 
-        public NamedObjectCodeBlock(string name, JsonWriter writer) : base("\"" + name + "\":{", "}", writer)
+        public NamedObjectCodeBlock(string name, JsonWriter writer) : base(name, "{", "}", writer)
         {
-            this.name = name;
+            
         }
     }
 
@@ -178,6 +246,67 @@ class MainClass
     {
         public ArrayCodeBlock(JsonWriter writer) : base("[", "]", writer)
         {
+        }
+    }
+
+    private class NamedArrayCodeBlock : CodeBlock
+    {
+        public NamedArrayCodeBlock(string name, JsonWriter writer) : base(name, "[", "]", writer)
+        {
+        }
+    }
+
+    private class NumberLiteral : CodeBlock
+    {
+        private readonly string key;
+        private readonly int value;
+
+        public NumberLiteral(int value, JsonWriter writer) : base(writer)
+        {
+            this.value = value;
+
+            Open();
+        }
+
+        public NumberLiteral(string key, int value, JsonWriter writer) : base(writer)
+        {
+            this.key = key;
+            this.value = value;
+
+            Open();
+        }
+
+        public override void Open()
+        {
+            writer.WriteKey(key);
+            writer.WriteInt(value);
+        }
+    }
+
+    private class StringLiteral : CodeBlock
+    {
+        private readonly string key;
+        private readonly string value;
+
+        public StringLiteral(string value, JsonWriter writer) : base(writer)
+        {
+            this.value = value;
+
+            Open();
+        }
+
+        public StringLiteral(string key, string value, JsonWriter writer) : base(writer)
+        {
+            this.key = key;
+            this.value = value;
+
+            Open();
+        }
+
+        public override void Open()
+        {
+            writer.WriteKey(key);
+            writer.WriteString(value);
         }
     }
 
@@ -289,14 +418,15 @@ class MainClass
 
     private class ModelBuilder
     {
-        Stack<Dictionary<string, object>> refs = new Stack<Dictionary<string, object>>();
+        Stack<object> refs = new Stack<object>();
         Stack<ElementType> refTypes = new Stack<ElementType>();
         public Dictionary<string, object> root = new Dictionary<string, object>();
 
-        string lastItemKey = "root";
+        string lastItemKey = "";
         StackState stackState = StackState.PushingKey;
 
-        Dictionary<string, object> lastRef { get { return refs.Peek(); } }
+        Dictionary<string, object> lastDictRef { get { return (Dictionary<string, object>)refs.Peek(); } }
+        List<object> lastListRef { get { return (List<object>)refs.Peek(); } }
         ElementType lastRefType { get { return refTypes.Peek(); } }
 
         public ModelBuilder()
@@ -313,10 +443,10 @@ class MainClass
                     switch (lastRefType)
                     {
                         case ElementType.Object:
-                            lastRef[lastItemKey] = value;
+                            lastDictRef[lastItemKey] = value;
                             break;
                         case ElementType.Array:
-                            lastRef["__" + lastRef.Count.ToString()] = value;
+                            lastListRef.Add(value);
                             break;
                         default:
                             break;
@@ -328,18 +458,34 @@ class MainClass
             }
         }
 
-        public Dictionary<string, object> AddElement(string key, ElementType type)
+        public void AddElement(string key, ElementType type)
         {
-            Dictionary<string, object> elm = new Dictionary<string, object>();
-            if (lastRefType == ElementType.Array)
-                lastRef.Add("__" + lastRef.Count.ToString(), elm);
-            else
-                lastRef.Add(key, elm);
+            Object elm = null;
+
+            switch (type)
+            {
+                case ElementType.Object:
+                    elm = new Dictionary<string, object>();
+                    break;
+                case ElementType.Array:
+                    elm = new List<object>();
+                    break;
+                default:
+                    break;
+            }
+
+            switch (lastRefType)
+            {
+                case ElementType.Array:
+                    lastListRef.Add(elm);
+                    break;
+                default:
+                    lastDictRef.Add(key, elm);
+                    break;
+            }
 
             refs.Push(elm);
             refTypes.Push(type);
-
-            return elm;
         }
 
         public void OpenValue()
