@@ -5,7 +5,7 @@ Just recently during a job interview process, I was asked to provide a solution 
 
 I wrote the first working version within 3 hours, later on just out of curiosity I did a benchmark and learned that I have written the WORLD's FASTEST JSON (de)serializer.
 
-Here are the results of doing 1000 deserializtion of an object:
+Here are the results of doing 1000 deserializtion of a JSON:
 
 
 - SimpleJsonParser: 5ms
