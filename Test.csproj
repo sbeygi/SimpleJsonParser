@@ -6,28 +6,9 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+  
   <ItemGroup>
-    <Compile Remove="Properties\**" />
-    <EmbeddedResource Remove="Properties\**" />
-    <None Remove="Properties\**" />
+    <PackageReference Include="Jil" Version="2.17.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="JsonDeserializer\CodeBlocks\ArrayCodeBlock.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\CodeBlock.cs" />
-    <Compile Include="JsonDeserializer\Enums\ElementType.cs" />
-    <Compile Include="JsonDeserializer\ModelBuilder.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\NamedArrayCodeBlock.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\NamedObjectCodeBlock.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\NumberLiteral.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\ObjectCodeBlock.cs" />
-    <Compile Include="JsonDeserializer\JsonParser.cs" />
-    <Compile Include="JsonDeserializer\JsonReader.cs" />
-    <Compile Include="JsonDeserializer\JsonSerializer.cs" />
-    <Compile Include="JsonDeserializer\JsonWriter.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="JsonDeserializer\Enums\StackState.cs" />
-    <Compile Include="JsonDeserializer\CodeBlocks\StringLiteral.cs" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
