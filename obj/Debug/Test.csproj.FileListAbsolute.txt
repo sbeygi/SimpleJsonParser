@@ -9,3 +9,7 @@ C:\Users\Saman\source\repos\Test\Test\obj\Debug\Test.pdb
 C:\Users\Saman\source\repos\Test\Test\bin\Debug\Newtonsoft.Json.dll
 C:\Users\Saman\source\repos\Test\Test\bin\Debug\Newtonsoft.Json.xml
 C:\Users\Saman\source\repos\Test\Test\obj\Debug\Test.csproj.CopyComplete
+C:\Users\Saman\source\repos\Test\Test\bin\Debug\Jil.dll
+C:\Users\Saman\source\repos\Test\Test\bin\Debug\Sigil.dll
+C:\Users\Saman\source\repos\Test\Test\bin\Debug\Jil.xml
+C:\Users\Saman\source\repos\Test\Test\bin\Debug\Sigil.xml
