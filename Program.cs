@@ -1,13 +1,10 @@
-﻿using Jil;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 
 class MainClass
 {
@@ -30,28 +27,6 @@ class MainClass
 		JsonSerializer.IgnoredItems.Add("N/A", "");
 		JsonSerializer.IgnoredItems.Add("-", "");
 		JsonSerializer.IgnoredItems.Add("", "");
-
-		Thread.Sleep(1000);
-
-		Stopwatch sp = new Stopwatch();
-		sp.Start();
-		for (int i = 0; i < 1000; i++)
-		{
-			JsonParser.Parse(json);
-			//JsonConvert.DeserializeObject(json);
-		}
-		sp.Stop();
-		Console.WriteLine(sp.ElapsedMilliseconds);
-
-		sp.Restart();
-		for (int i = 0; i < 1000; i++)
-		{
-			//JsonParser.Parse(json);
-			//JsonConvert.DeserializeObject(json);
-			JSON.DeserializeDynamic(json);
-		}
-		sp.Stop();
-		Console.WriteLine(sp.ElapsedMilliseconds);
 
 		var data = JsonParser.Parse(json);
 		var output = JsonSerializer.Serialize(data);
