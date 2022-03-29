@@ -7,8 +7,8 @@ I wrote the first working version within 3 hours, later on just out of curiosity
 
 Here are the results of doing 1000 deserializtion of an object:
 
-JsonParser: 5ms
+- SimpleJsonParser: 5ms
 
-Newtonsoft: 63ms
+- Newtonsoft: 63ms
 
-     Jil: 12ms
+- Jil: 12ms
