@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -26,7 +25,7 @@ class MainClass
 
 		JsonSerializer.IgnoredItems.Add("N/A", "");
 		JsonSerializer.IgnoredItems.Add("-", "");
-		JsonSerializer.IgnoredItems.Add("", "");
+		JsonSerializer.IgnoredItems.Add("", "");	
 
 		var data = JsonParser.Parse(json);
 		var output = JsonSerializer.Serialize(data);
