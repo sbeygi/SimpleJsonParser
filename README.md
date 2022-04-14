@@ -13,3 +13,5 @@ Here are the results of doing 1000 deserializtion of a JSON:
 - Newtonsoft: 63ms
 
 - Jil: 12ms
+
+- Utf8Json: 21ms
